@@ -5,10 +5,15 @@ import connectDB from './configs/db.js';
 import userRouter from './routes/userRoutes.js';
 import chatRouer from './routes/chatRoutes.js';
 import messageRouer from './routes/messageRoutes.js';
+import creditRouter from './routes/creditRoutes.js';
+import { stripeWebhooks } from './controllers/webhooks.js';
 
 const app=express()
 
 await connectDB()
+
+//Stripe webhooks
+app.post('/api/stripe',express.raw({type:'application/json'}),stripeWebhooks)
 //Middlewares
 app.use(cors())
 app.use(express.json())
@@ -21,6 +26,7 @@ app.get('/',(req,res)=>{
 app.use('/api/user',userRouter)
 app.use('/api/chat',chatRouer)
 app.use('/api/message',messageRouer)
+app.use('/api/credit',creditRouter)
 
 const PORT=process.env.PORT || 3000
 
