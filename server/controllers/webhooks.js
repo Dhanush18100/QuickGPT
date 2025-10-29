@@ -10,9 +10,9 @@ export const stripeWebhooks=async (req,res) => {
     let event;
 
     try {
-        event=stripe.webhooks.constructEvent(request.bodt,sig,process.env.STRIPE_WEBHOOK_SECRET)
+       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (error) {
-        return response.status(400).send(`Webhook Error : ${error.message}`)
+        return res.status(400).send(`Webhook Error : ${error.message}`)
     }
 
     try {
@@ -35,7 +35,7 @@ export const stripeWebhooks=async (req,res) => {
                     transaction.isPaid= true;
                     await transaction.save()
                 }else{
-                    return response.json({received:true,message:"Ignored event: Invalid app"})
+                    return res.json({received:true,message:"Ignored event: Invalid app"})
                 }
                 break;
             }
@@ -45,9 +45,9 @@ export const stripeWebhooks=async (req,res) => {
                 console.log("Unhandled event type:",event.type)
                 break;
         }
-        response.json({received:true})
+        res.json({received:true})
     } catch (error) {
         console.error("Webhook processing error:",error)
-        response.status(500).send("Internal Server Error")
+        res.status(500).send("Internal Server Error")
     }
 }

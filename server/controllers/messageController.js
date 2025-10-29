@@ -11,38 +11,65 @@ import openai from "../configs/openai.js"
 
 
 export const textMessageController = async (req, res) => {
-    try {
-        const userId = req.user._id
-        //Check credits
-        if (req.user.credits < 1) {
-            return res.json({ success: false, message: "You don't have enough credits to use this feature" })
-        }
-        const { chatId, prompt } = req.body
+  try {
+    const userId = req.user._id;
 
-        const chat = await Chat.findOne({ userId, _id: chatId })
-        chat.messages.push({ role: "user", content: prompt, timestamp: Date.now(), isImage: false })
-
-        const { choices } = await openai.chat.completions.create({
-            model: "gemini-2.0-flash",
-            messages: [
-                // { role: "system", content: "You are a helpful assistant." },
-                {
-                    role: "user",
-                    content: prompt,
-                },
-            ],
-        });
-        const reply = { ...choices[0].message, timestamp: Date.now(), isImage: false }
-        res.json({ success: true, reply })
-
-        chat.messages.push(reply)
-        await chat.save()
-        await User.updateOne({ _id: userId }, { $inc: { credits: -1 } })
-    } catch (error) {
-        res.json({ success: false, message: error.message })
+    // ✅ Check credits
+    if (req.user.credits < 1) {
+      return res.json({
+        success: false,
+        message: "You don't have enough credits to use this feature",
+      });
     }
 
-}
+    const { chatId, prompt } = req.body;
+
+    const chat = await Chat.findOne({ userId, _id: chatId });
+    if (!chat) {
+      return res.json({ success: false, message: "Chat not found" });
+    }
+
+    // ✅ Push user message
+    chat.messages.push({
+      role: "user",
+      content: prompt,
+      timeStamp: Date.now(),
+      isImage: false,
+    });
+
+    // ✅ Generate AI reply
+    const { choices } = await openai.chat.completions.create({
+      model: "gemini-2.0-flash",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    });
+
+    // ✅ Ensure correct field name (timeStamp)
+    const reply = {
+      role: choices[0]?.message?.role || "assistant",
+      content: choices[0]?.message?.content || "No response from AI.",
+      timeStamp: Date.now(),
+      isImage: false,
+    };
+
+    // ✅ Save message and update credits
+    chat.messages.push(reply);
+    await chat.save();
+    await User.updateOne({ _id: userId }, { $inc: { credits: -1 } });
+
+    // ✅ Send final response
+    return res.json({ success: true, reply });
+
+  } catch (error) {
+    console.error("Error in textMessageController:", error.message);
+    return res.json({ success: false, message: error.message });
+  }
+};
+
 
 //Image generation Message Controller
 export const imageMessageController = async (req, res) => {
@@ -57,7 +84,7 @@ export const imageMessageController = async (req, res) => {
         const chat = await Chat.findOne({ userId, _id: chatId })
         //Push user message
         chat.messages.push({
-            role: "user", content: prompt, timestamp: Date.now(), isImage: false
+            role: "user", content: prompt, timeStamp: Date.now(), isImage: false
         })
         //Encode the prompt
         const encodedPrompt = encodeURIComponent(prompt)
@@ -80,7 +107,7 @@ export const imageMessageController = async (req, res) => {
         const reply = {
             role: 'assistant',
             content: uploadResponse.url,
-            timestamp: Date.now(),
+            timeStamp: Date.now(),
             isImage: true,
             isPublished
         }

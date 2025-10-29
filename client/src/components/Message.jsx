@@ -11,28 +11,28 @@ const Message = ({message}) => {
   },[message.content])
   return (
     <div>
+      
       {message.role==="user"?(
+        console.log(message),
+        
         <div className='flex items-start justify-end my-4 gap-2'>
           <div className='flex flex-col gap-2 p-2 bg-slate-50 dark:bg-[#57317C]/30 border border-[#80609F]/30 rounded-md max-w-full'>
             <p className='text-sm dark:text-primary'>
               {message.content}</p>
-            <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>{moment(message.timestamp).fromNow()}</span>
+            <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>{moment(message.timeStamp).fromNow()}</span>
           </div>
           <img className='w-8 rounded-full' src={assets.user_icon} alt="" />
         </div>
-      )
-    :
-    (
+      ):(
       <div className='inline-flex flex-col gap-2 p-2 px-4 max-w-2xl bg-primary/20 dark:bg-[#57317C]/30 border border-[#80609F]/30 rounded-md my-4'>
         {message.isImage ? (
           <img src={message.content} alt="" className='w-full max-w-md mt-2 rounded-md' />
-        ):
-        (
+        ):(
           <div className='text-sm dark:text-primary reset-tw'>
            <Markdown>{message.content}</Markdown> 
           </div>
         )}
-        <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>{moment(message.timestamp).fromNow()}</span>
+        <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>{moment(message.timeStamp).fromNow()}</span>
       </div>
     )}
     </div>
